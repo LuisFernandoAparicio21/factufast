@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Factufast — Genera tu CFDI 4.0</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>Factufast</h1>
+    <p class="subtitle">Genera tu factura electrónica en segundos</p>
+
+    <form id="factura-form">
+      <div class="field">
+        <label for="rfc">RFC del receptor</label>
+        <input type="text" id="rfc" name="rfc" placeholder="XAXX010101000" maxlength="13" required />
+      </div>
+
+      <div class="field">
+        <label for="nombre">Nombre / Razón social</label>
+        <input type="text" id="nombre" name="nombre" placeholder="Nombre completo o razón social" required />
+      </div>
+
+      <div class="field">
+        <label for="codigo_postal">Código postal</label>
+        <input type="text" id="codigo_postal" name="codigo_postal" placeholder="06600" maxlength="5" required />
+      </div>
+
+      <div class="field">
+        <label for="regimen_fiscal">Régimen fiscal</label>
+        <select id="regimen_fiscal" name="regimen_fiscal" required>
+          <option value="">Selecciona tu régimen</option>
+          <option value="601">601 — General de Ley Personas Morales</option>
+          <option value="603">603 — Personas Morales con Fines no Lucrativos</option>
+          <option value="605">605 — Sueldos y Salarios</option>
+          <option value="606">606 — Arrendamiento</option>
+          <option value="608">608 — Demás ingresos</option>
+          <option value="612">612 — Personas Físicas con Actividades Empresariales</option>
+          <option value="616">616 — Sin obligaciones fiscales</option>
+          <option value="621">621 — Incorporación Fiscal</option>
+          <option value="626">626 — Resico Personas Físicas</option>
+        </select>
+      </div>
+
+      <button type="submit" id="btn-submit">Generar Factura</button>
+    </form>
+
+    <div id="resultado" class="hidden">
+      <h2>¡Factura generada!</h2>
+      <p>Folio fiscal: <strong id="folio"></strong></p>
+      <div class="links">
+        <a id="link-pdf" href="#" target="_blank">Descargar PDF</a>
+        <a id="link-xml" href="#" target="_blank">Descargar XML</a>
+      </div>
+    </div>
+
+    <div id="error-box" class="hidden">
+      <p id="error-msg"></p>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "body": "{\"rfc\":\"XAXX010101000\",\"nombre\":\"Publico en General\",\"codigo_postal\":\"06600\",\"regimen_fiscal\":\"616\"}",
+  "httpMethod": "POST",
+  "path": "/facturas"
+}
