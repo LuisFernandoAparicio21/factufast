@@ -61,10 +61,19 @@ factufast/
 │   ├── requirements.txt
 │   ├── samconfig.toml
 │   └── template.yaml                # SAM IaC (Lambda + API GW + DynamoDB)
-├── frontend/
-│   ├── index.html
-│   ├── style.css
-│   └── app.js
+├── frontend/                        # React Native app (Expo)
+│   ├── app/
+│   │   ├── index.tsx                # Main screen (invoice form)
+│   │   └── resultado.tsx            # Result screen (folio + PDF/XML links)
+│   ├── components/
+│   │   └── CampoFormulario.tsx      # Reusable form field component
+│   ├── services/
+│   │   └── api.ts                   # API Gateway fetch (single connection point to backend)
+│   ├── constants/
+│   │   └── regimenes.ts             # SAT tax regime catalog
+│   ├── app.json                     # Expo config
+│   ├── package.json
+│   └── tsconfig.json
 ├── amplify.yml                      # Amplify CI/CD build spec
 ├── .env.example                     # Local dev environment variables
 ├── .gitignore
