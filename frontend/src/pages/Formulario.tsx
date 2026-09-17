@@ -48,9 +48,9 @@ function FieldError({ msg }: { msg?: string }) {
   return <p className="mt-1.5 text-xs text-red-600">{msg}</p>
 }
 
-function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
+function Label({ children, required, htmlFor }: { children: React.ReactNode; required?: boolean; htmlFor: string }) {
   return (
-    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+    <label htmlFor={htmlFor} className="block text-sm font-medium text-gray-700 mb-1.5">
       {children}
       {required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
@@ -144,13 +144,14 @@ export function Formulario() {
               {/* RFC + CP row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label required>
+                  <Label required htmlFor="rfc_receptor">
                     <span className="flex items-center gap-1.5">
                       <FileText size={13} className="text-gray-400" />
                       RFC del receptor
                     </span>
                   </Label>
                   <input
+                    id="rfc_receptor"
                     name="rfc_receptor"
                     type="text"
                     value={campos.rfc_receptor}
@@ -166,13 +167,14 @@ export function Formulario() {
                 </div>
 
                 <div>
-                  <Label required>
+                  <Label required htmlFor="cp_receptor">
                     <span className="flex items-center gap-1.5">
                       <MapPin size={13} className="text-gray-400" />
                       Código postal
                     </span>
                   </Label>
                   <input
+                    id="cp_receptor"
                     name="cp_receptor"
                     type="text"
                     inputMode="numeric"
@@ -190,8 +192,9 @@ export function Formulario() {
 
               {/* Régimen */}
               <div>
-                <Label required>Régimen fiscal</Label>
+                <Label required htmlFor="regimen_fiscal_receptor">Régimen fiscal</Label>
                 <select
+                  id="regimen_fiscal_receptor"
                   name="regimen_fiscal_receptor"
                   value={campos.regimen_fiscal_receptor}
                   onChange={(e) => handleChange('regimen_fiscal_receptor', e.target.value)}
@@ -224,8 +227,9 @@ export function Formulario() {
             </div>
 
             <div className="p-5">
-              <Label required>Correo del receptor</Label>
+              <Label required htmlFor="email_receptor">Correo del receptor</Label>
               <input
+                id="email_receptor"
                 name="email_receptor"
                 type="email"
                 value={campos.email_receptor}
@@ -253,7 +257,7 @@ export function Formulario() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             {loading ? (
               <>
