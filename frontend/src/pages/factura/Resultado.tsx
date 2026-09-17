@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { CheckCircle2, Copy, Check, FileDown, FileCode2, ArrowLeft, AlertCircle } from 'lucide-react'
-import type { FacturaResult } from '../services/api'
+import type { FacturaResult } from '../../services/api'
 
 export function Resultado() {
   const location = useLocation()

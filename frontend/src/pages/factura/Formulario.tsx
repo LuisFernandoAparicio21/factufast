@@ -1,8 +1,8 @@
 import { useState, type FormEvent, type FocusEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Loader2, FileText, MapPin, Building2, Mail } from 'lucide-react'
-import { generarFactura } from '../services/api'
-import { REGIMENES } from '../constants/regimenes'
+import { generarFactura } from '../../services/api'
+import { REGIMENES } from '../../constants/regimenes'
 
 interface Campos {
   rfc_receptor: string
