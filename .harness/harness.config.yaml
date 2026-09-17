@@ -1,0 +1,75 @@
+project: factufast-ai
+description: Serverless CFDI 4.0 invoicing MVP on AWS
+
+spec: proyecto-facturacion-mvp.md
+plan_file: .harness/state/tasks.json
+
+workflow:
+  phases:
+    - id: fase-1
+      name: Validar Facturama standalone
+      branch: fase-1/facturama-standalone
+      autonomous: false
+      depends_on: []
+    - id: fase-2
+      name: Infraestructura SAM completa
+      branch: fase-2/sam-infrastructure
+      autonomous: false
+      depends_on: [fase-1]
+    - id: fase-3
+      name: Lambda completa
+      branch: fase-3/lambda-complete
+      autonomous: false
+      depends_on: [fase-2]
+    - id: fase-4
+      name: SES + S3 en AWS real
+      branch: fase-4/ses-s3-aws
+      autonomous: false
+      depends_on: [fase-3]
+    - id: fase-5
+      name: Frontend React Native
+      branch: fase-5/frontend-rn
+      autonomous: false
+      depends_on: [fase-4]
+    - id: fase-6
+      name: Lambda resumen + EventBridge
+      branch: fase-6/resumen-eventbridge
+      autonomous: false
+      depends_on: [fase-5]
+    - id: fase-7
+      name: Cierre MVP
+      branch: fase-7/cierre-mvp
+      autonomous: false
+      depends_on: [fase-6]
+
+verification:
+  test_command: cd backend && python -m pytest tests/ -v 2>/dev/null || echo "no tests yet"
+  sam_validate: cd backend && sam validate --template template.yaml
+  lint_backend: cd backend && python -m flake8 src/ --max-line-length=120
+  expo_check: cd frontend && npx expo-doctor 2>/dev/null || echo "expo not configured yet"
+
+models:
+  orchestrator: sonnet
+  architect: sonnet
+  builder: sonnet
+  reviewer: sonnet
+  scout: haiku
+
+gates:
+  require_spec_approval: true
+  require_review_pass: true
+  require_no_plaintext_secrets: true
+  require_sam_validate: true
+
+telemetry:
+  history_file: .harness/progress/history.md
+
+security:
+  never_commit:
+    - "*.env"
+    - "*.key"
+    - "*.cer"
+    - "*_PASS*"
+    - "*credentials*"
+  error_messages_must_not_include: [rfc, email, nombre, cp, regimen]
+  presigned_url_max_seconds: 3600
