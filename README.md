@@ -1,176 +1,177 @@
 # FactuFastAI
 
-MVP de facturación electrónica CFDI 4.0 construido sobre AWS Serverless. Proyecto de práctica para aprender AWS con un caso real: una pyme manda 4 datos y recibe su factura timbrada por correo.
+Serverless MVP for generating CFDI 4.0 electronic invoices (Mexico) built on AWS. A business sends 4 fields and receives a stamped invoice by email.
 
-> Sandbox Facturama — las facturas generadas son apócrifas (sin validez legal).
+> Runs against Facturama sandbox — invoices generated have no legal validity.
 
 ---
 
 ## Stack
 
-| Capa | Tecnología |
+| Layer | Technology |
 |---|---|
-| Frontend | HTML + CSS + JS estático, desplegado en **AWS Amplify** |
+| Frontend | Static HTML + CSS + JS deployed on **AWS Amplify** |
 | API | **API Gateway** (REST) |
 | Backend | **AWS Lambda** · Python 3.12 · SAM |
-| Base de datos | **DynamoDB** On-Demand (`pk=rfc`, `sk=folio_fiscal`) |
-| Correo | **Amazon SES v2** (link pre-firmado S3) |
-| PAC (timbrado) | **Facturama** API Multiemisor sandbox |
-| Credenciales | **AWS SSM Parameter Store** |
+| Database | **DynamoDB** On-Demand (`pk=rfc`, `sk=folio_fiscal`) |
+| Email | **Amazon SES v2** (S3 pre-signed URL) |
+| PAC (stamping) | **Facturama** Multi-issuer sandbox API |
+| Credentials | **AWS SSM Parameter Store** |
 | IaC | **AWS SAM** (`template.yaml`) |
 
 ---
 
-## Arquitectura
+## Architecture
 
 ```
-Formulario (Amplify)
+Form (Amplify)
       ↓
  API Gateway  POST /facturas
       ↓
  Lambda crear_factura
-      ├─ 1. validar_campos()
-      ├─ 2. Facturama API → CFDI timbrado
-      ├─ 3. DynamoDB → guardar estatus + folio fiscal
-      ├─ 4. S3 → guardar PDF/XML
-      └─ 5. SES → enviar link al receptor
+      ├─ 1. validate_fields()
+      ├─ 2. Facturama API → stamped CFDI
+      ├─ 3. DynamoDB → write status + fiscal folio
+      ├─ 4. S3 → store PDF/XML
+      └─ 5. SES → send download link to recipient
 ```
 
 ---
 
-## Estructura del proyecto
+## Project Structure
 
 ```
 factufast/
 ├── backend/
 │   ├── src/
 │   │   ├── handlers/
-│   │   │   └── crear_factura.py     # Handler principal del Lambda
+│   │   │   └── crear_factura.py     # Main Lambda handler
 │   │   ├── services/
-│   │   │   └── facturama.py         # Cliente Facturama API
+│   │   │   └── facturama.py         # Facturama API client
 │   │   └── utils/
-│   │       ├── db.py                # Escritura a DynamoDB
-│   │       ├── validators.py        # Validación RFC, CP, régimen
-│   │       └── response.py          # Helpers HTTP 200/400/500
+│   │       ├── db.py                # DynamoDB write helpers
+│   │       ├── validators.py        # RFC, postal code, tax regime validation
+│   │       └── response.py          # HTTP 200/400/500 helpers
 │   ├── layers/python/
-│   │   └── requirements.txt         # Dependencias empaquetadas en Lambda Layer
+│   │   └── requirements.txt         # Dependencies packaged as Lambda Layer
 │   ├── events/
-│   │   └── crear_factura.json       # Evento de prueba para sam local invoke
+│   │   └── crear_factura.json       # Test event for sam local invoke
 │   ├── tests/
 │   │   └── conftest.py
 │   ├── requirements.txt
 │   ├── samconfig.toml
-│   └── template.yaml                # Infraestructura SAM (Lambda + API GW + DynamoDB)
+│   └── template.yaml                # SAM IaC (Lambda + API GW + DynamoDB)
 ├── frontend/
 │   ├── index.html
 │   ├── style.css
 │   └── app.js
-├── amplify.yml                      # Build spec para Amplify CI/CD
-├── .env.example                     # Variables de entorno para desarrollo local
+├── amplify.yml                      # Amplify CI/CD build spec
+├── .env.example                     # Local dev environment variables
 ├── .gitignore
-└── proyecto-facturacion-mvp.md      # Documento técnico completo del MVP
+└── proyecto-facturacion-mvp.md      # Full technical reference document (Spanish)
 ```
 
 ---
 
-## Prerrequisitos
+## Prerequisites
 
-- [AWS CLI](https://aws.amazon.com/cli/) configurado (`aws configure`)
+- [AWS CLI](https://aws.amazon.com/cli/) configured (`aws configure`)
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 - Python 3.12
-- Cuenta en [Facturama sandbox](https://apisandbox.facturama.mx)
+- [Facturama sandbox](https://apisandbox.facturama.mx) account
 
 ---
 
-## Configuración inicial
+## Setup
 
-### 1. Cargar credenciales de Facturama en SSM
+### 1. Store Facturama credentials in SSM
 
 ```bash
 aws ssm put-parameter \
   --name /factufast/facturama_user \
-  --value "TU_USUARIO_SANDBOX" \
+  --value "YOUR_SANDBOX_USER" \
   --type SecureString
 
 aws ssm put-parameter \
   --name /factufast/facturama_pass \
-  --value "TU_PASSWORD_SANDBOX" \
+  --value "YOUR_SANDBOX_PASS" \
   --type SecureString
 ```
 
-### 2. Cargar el CSD de prueba en Facturama (una sola vez)
+### 2. Upload the test CSD to Facturama (one-time)
 
 ```bash
-# Con un script Python local, antes de desplegar
-# Ver sección 4.1 de proyecto-facturacion-mvp.md
+# Run locally with a Python script before deploying
+# See section 4.1 of proyecto-facturacion-mvp.md
 python scripts/cargar_csd.py
 ```
 
-### 3. Variables de entorno para desarrollo local
+### 3. Local environment variables
 
 ```bash
 cp .env.example .env
-# Editar .env con tus credenciales sandbox
+# Edit .env with your sandbox credentials
 ```
 
 ---
 
-## Despliegue
+## Deploy
 
 ```bash
 cd backend
 
-# Primera vez
+# First time
 sam build
 sam deploy --guided
 
-# Deploys siguientes
+# Subsequent deploys
 sam build && sam deploy
 ```
 
-Al terminar, SAM imprime el `ApiUrl` — ese endpoint va en `frontend/app.js`.
+SAM prints the `ApiUrl` at the end — paste it into `frontend/app.js`.
 
 ---
 
-## Prueba local
+## Local Testing
 
 ```bash
 cd backend
 
-# Invocar el Lambda con el evento de prueba
+# Invoke Lambda with the test event
 sam local invoke CrearFacturaFunction --event events/crear_factura.json
 
-# Levantar API local (requiere Docker)
+# Start local API (requires Docker)
 sam local start-api
 ```
 
 ---
 
-## Verificaciones necesarias antes del test end-to-end
+## Before End-to-End Testing
 
-1. **SES — verificar identidades**: en AWS Console → SES → Verified identities, verificar el correo emisor y el correo receptor de prueba (sandbox SES solo envía a direcciones verificadas).
-2. **SES — crear Configuration Set**: SES → Configuration sets → crear `factufast-config`.
+1. **SES — verify identities**: AWS Console → SES → Verified identities. Verify both the sender email and the test recipient email. SES sandbox only sends to verified addresses.
+2. **SES — create Configuration Set**: SES → Configuration sets → create `factufast-config`.
 
 ---
 
-## Sandbox vs Producción
+## Sandbox vs Production
 
-| | Sandbox | Producción |
+| | Sandbox | Production |
 |---|---|---|
-| RFC emisor | `EKU9003173C9` (prueba) | RFC real de la pyme |
-| CSD | Certificado de prueba Facturama | CSD real tramitado ante el SAT |
-| Cuenta Facturama | Gratis, sin trámite | Suscripción + activar Multiemisor |
-| Validez CFDI | Ninguna (apócrifo) | Legal ante el SAT |
-| Código | Igual | Igual — solo cambian los datos |
-| URL Facturama | `apisandbox.facturama.mx` | `api.facturama.mx` |
-| SES | Sandbox (solo direcciones verificadas) | Verificar dominio completo + DKIM/SPF/DMARC |
+| Issuer RFC | `EKU9003173C9` (test) | Real business RFC |
+| CSD | Facturama test certificate | Real CSD issued by SAT |
+| Facturama account | Free, no paperwork | Paid subscription + activate Multi-issuer |
+| CFDI validity | None (apocryphal) | Legally valid before SAT |
+| Code | Same | Same — only the data changes |
+| Facturama URL | `apisandbox.facturama.mx` | `api.facturama.mx` |
+| SES | Sandbox (verified addresses only) | Verify full domain + DKIM/SPF/DMARC |
 
 ---
 
-## Notas de diseño
+## Design Decisions
 
-- **DynamoDB On-Demand** — sin necesidad de estimar RCU/WCU; escala automático y entra en Free Tier para volúmenes bajos.
-- **Un solo `put_item` al final** — el Lambda escribe en DynamoDB después de llamar a Facturama, no antes, para evitar doble escritura en caso de error.
-- **ConditionExpression en put_item** — protege contra retries del cliente que sobreescriban un registro ya guardado.
-- **Link S3 en lugar de adjunto PDF** — SES envía un pre-signed URL válido 24h; adjuntar binarios requiere MIME a mano.
-- **SSM Parameter Store** para credenciales Facturama — no variables de entorno en texto plano.
+- **DynamoDB On-Demand** — no RCU/WCU capacity planning; auto-scales and stays within Free Tier for low volumes.
+- **Single `put_item` after Facturama** — Lambda writes to DynamoDB after the stamping call, not before, avoiding a double-write on error.
+- **`ConditionExpression` on `put_item`** — prevents client retries from overwriting an already-saved record (`ConditionalCheckFailedException`).
+- **S3 pre-signed URL instead of PDF attachment** — SES sends a 24h download link; attaching binaries requires manual MIME construction.
+- **SSM Parameter Store** for Facturama credentials — no plaintext environment variables.
+- **RFC + postal code validation before the folio counter** — a bad RFC caught early means no wasted folio numbers.
