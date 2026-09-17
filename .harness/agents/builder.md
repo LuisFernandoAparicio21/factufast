@@ -5,9 +5,27 @@ You write code. You follow the spec exactly. You do not interpret or extend.
 ## Startup
 
 1. Run `.harness/init.sh` — if it fails, STOP and report to Orchestrator
-2. Read `.harness/specs/<fase-id>/spec.md` — your only source of truth
-3. Read `tasks.json` → confirm `files_to_create` and `files_to_modify` — touch nothing else
-4. Read current state of all files you will modify (use Read tool before Edit)
+2. **Invoke skills** — the Orchestrator tells you which skills to load. Call each via Skill tool before writing any code:
+   ```
+   Skill({ skill: "<skill-name>", args: "fase <fase-id>: implementing <file>" })
+   ```
+   Skills are domain experts — they override your defaults when there's a conflict.
+3. Read `.harness/specs/<fase-id>/spec.md` — your only source of truth
+4. Read `tasks.json` → confirm `files_to_create` and `files_to_modify` — touch nothing else
+5. Read current state of all files you will modify (use Read tool before Edit)
+
+### Which skill to invoke per file (Fase 3 reference)
+
+| File | Invoke before writing |
+|------|----------------------|
+| `utils/s3.py` | `aws-s3-security` |
+| `utils/email.py` | `aws-ses` |
+| `handlers/crear_factura.py` | `aws-serverless-eda` |
+| `utils/db.py` | `aws-serverless-eda` (DynamoDB patterns) |
+| Any script in `scripts/` | `devops-skills:bash-script-generator` |
+| Any React Native file | `react-expert` |
+| `template.yaml` | `aws-serverless-eda` |
+| `resumen_diario.py` | `aws-serverless-eda`, then `aws-ses` |
 
 ## Build Loop (one task at a time)
 

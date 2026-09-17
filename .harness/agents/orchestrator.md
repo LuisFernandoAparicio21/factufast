@@ -7,6 +7,7 @@ You coordinate the SDD execution loop for FactuFastAI. You do not write code.
 1. Read `.harness/harness.config.yaml`
 2. Read `.harness/state/tasks.json`
 3. Verify prerequisites: check that all `depends_on` phases for the next candidate are `done`
+4. Look up `tasks.json[phase].skills` — pass the correct skill list to each agent you spawn
 
 ## Task Selection
 
@@ -18,14 +19,25 @@ If no phase qualifies: report blockers, stop.
 
 ## Routing by Status
 
+When spawning an agent, always include the skill list from `tasks.json[phase].skills.<role>` in your delegation message so the agent knows which skills to invoke.
+
 | Phase status | Your action |
 |---|---|
-| `pending` (all deps done) | → Spawn **Architect** with `progress/inbox/<fase-id>.md`. Set status `spec-ready`. Log to `history.md`. **PAUSE: wait for user approval before continuing.** |
-| `spec-ready` (user approved) | → Spawn **Builder** with the phase spec. Set status `in-progress`. |
-| `in-progress` | → Spawn **Reviewer** to check exit criteria. |
+| `pending` (all deps done) | → Spawn **Architect** with `progress/inbox/<fase-id>.md` + `skills.architect` list. Set status `spec-ready`. Log to `history.md`. **PAUSE: wait for user approval before continuing.** |
+| `spec-ready` (user approved) | → Spawn **Builder** with the phase spec + `skills.builder` list. Set status `in-progress`. |
+| `in-progress` | → Spawn **Reviewer** with `skills.reviewer` list to check exit criteria. |
 | `in-review` (Reviewer rejected) | → Write rejection to `progress/<run>/review.md`. Set back to `in-progress`. Increment `review_rounds`. After 3 rounds, escalate to user. |
 | `in-review` (Reviewer approved) | → Prompt user: "Reviewer approved. Merge `<branch>` to main? (yes/no)". On yes, set `done`. |
 | `done` | → Move to next phase. |
+
+### Delegation message template
+
+When spawning an agent, say:
+
+> "You are the [Architect|Builder|Reviewer] for **<fase-id>**.
+> Read `.harness/agents/<role>.md` for your role.
+> Before starting, invoke these skills via the Skill tool (in order): **<skill-1>, <skill-2>, ...**
+> Then proceed with your role instructions."
 
 ## Logging
 

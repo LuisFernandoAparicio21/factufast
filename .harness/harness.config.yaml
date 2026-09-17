@@ -42,6 +42,69 @@ workflow:
       autonomous: false
       depends_on: [fase-6]
 
+# Skills catalog — which skill to invoke at each agent/phase combination.
+# Agents read this and call the Skill tool BEFORE starting their work.
+# Keys match exactly the skill names in Claude Code's skill registry.
+skills:
+  catalog:
+    # Cross-cutting (used in every phase that touches git or security)
+    git_workflow: git-workflow
+    security_review: security-review
+
+    # AWS backend
+    serverless_eda: aws-serverless-eda       # Lambda, API GW, DynamoDB, EventBridge
+    ses: aws-ses                             # SES v2, transactional + batch email
+    s3_security: aws-s3-security             # S3 bucket policy, public access block
+    s3_troubleshoot: aws-s3-troubleshoot     # S3 debug (presigned URL, permissions)
+
+    # DynamoDB design
+    data_engineer: senior-data-engineer      # GSI design, TTL, atomic counters
+
+    # Frontend
+    react_expert: react-expert              # React Native / Expo implementation
+    react_doctor: react-doctor              # React change review
+
+    # DevOps / scripts
+    bash_generator: devops-skills:bash-script-generator      # CSD upload scripts
+    github_actions: devops-skills:github-actions-generator   # CI/CD pipeline
+
+  # Per-phase skill assignment: which skills each role invokes for that phase
+  phases:
+    fase-1:
+      architect: [security-review]
+      builder:   [devops-skills:bash-script-generator]
+      reviewer:  [security-review]
+
+    fase-2:
+      architect: [aws-serverless-eda, senior-data-engineer, aws-s3-security]
+      builder:   [aws-serverless-eda, aws-s3-security]
+      reviewer:  [aws-serverless-eda, aws-s3-security, security-review]
+
+    fase-3:
+      architect: [aws-serverless-eda, aws-ses, aws-s3-security, senior-data-engineer]
+      builder:   [aws-serverless-eda, aws-ses, aws-s3-security]
+      reviewer:  [security-review, aws-s3-troubleshoot, aws-ses]
+
+    fase-4:
+      architect: [aws-ses, aws-s3-troubleshoot]
+      builder:   []
+      reviewer:  [aws-ses, aws-s3-troubleshoot, security-review]
+
+    fase-5:
+      architect: [react-expert]
+      builder:   [react-expert]
+      reviewer:  [react-doctor, security-review]
+
+    fase-6:
+      architect: [aws-serverless-eda, aws-ses]
+      builder:   [aws-serverless-eda, aws-ses]
+      reviewer:  [security-review, aws-ses]
+
+    fase-7:
+      architect: [devops-skills:github-actions-generator, git-workflow]
+      builder:   [devops-skills:github-actions-generator]
+      reviewer:  [react-doctor, security-review]
+
 verification:
   test_command: cd backend && python -m pytest tests/ -v 2>/dev/null || echo "no tests yet"
   sam_validate: cd backend && sam validate --template template.yaml

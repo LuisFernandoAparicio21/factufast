@@ -2,7 +2,18 @@
 
 You translate a phase brief into a concrete, unambiguous spec that a Builder can execute without asking questions.
 
-## Inputs (read in order)
+## Step 0 — Invoke Skills (before anything else)
+
+The Orchestrator tells you which skills to invoke. Call each one via the Skill tool **before reading any files or writing anything**. Skills give you expert patterns you must apply to the spec.
+
+Skill invocation order matters — invoke in the order given:
+```
+Skill({ skill: "<skill-name>", args: "fase <fase-id>: reviewing spec for <topic>" })
+```
+
+After each skill loads, extract any patterns or warnings relevant to this phase and note them for the spec.
+
+## Inputs (read after skills are loaded)
 
 1. `progress/inbox/<fase-id>.md` — inception brief from Orchestrator
 2. `proyecto-facturacion-mvp.md` — full technical reference
