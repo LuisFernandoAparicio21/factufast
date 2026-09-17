@@ -10,35 +10,44 @@ Serverless MVP for generating CFDI 4.0 electronic invoices (Mexico) built on AWS
 
 | Layer | Technology |
 |---|---|
-| Frontend | Static HTML + CSS + JS deployed on **AWS Amplify** |
-| API | **API Gateway** (REST) |
+| Frontend | **React 18** · Vite 5 · TypeScript · Tailwind CSS · AWS Amplify |
+| API | **API Gateway** (REST) · API Key auth |
 | Backend | **AWS Lambda** · Python 3.12 · SAM |
-| Database | **DynamoDB** On-Demand (`pk=rfc`, `sk=folio_fiscal`) |
-| Email | **Amazon SES v2** (S3 pre-signed URL) |
+| Database | **DynamoDB** On-Demand · GSI `fecha-estatus-index` |
+| Storage | **S3** — PDF/XML with pre-signed URLs (1h expiry) |
+| Email | **Amazon SES v2** · Configuration Sets per stream |
+| Scheduler | **EventBridge Scheduler** — daily summary (Mexico City tz) |
 | PAC (stamping) | **Facturama** Multi-issuer sandbox API |
 | Credentials | **AWS SSM Parameter Store** |
-| IaC | **AWS SAM** (`template.yaml`) |
+| IaC | **AWS SAM** (`backend/template.yaml`) |
 
 ---
 
 ## Architecture
 
-![FactuFastAI Architecture](docs/arquitectura.png)
+![FactuFastAI Architecture](FactuFast.png)
 
 <details>
 <summary>Text version</summary>
 
 ```
-Form (Amplify)
+React App (Amplify)
       ↓
- API Gateway  POST /facturas
+ API Gateway  POST /facturas  [x-api-key]
       ↓
  Lambda crear_factura
       ├─ 1. validate_fields()
-      ├─ 2. Facturama API → stamped CFDI
-      ├─ 3. DynamoDB → write status + fiscal folio
-      ├─ 4. S3 → store PDF/XML
-      └─ 5. SES → send download link to recipient
+      ├─ 2. increment folio (CountersTable atomic counter)
+      ├─ 3. Facturama API → stamped CFDI (UUID)
+      ├─ 4. DynamoDB → write status + folio (ConditionExpression)
+      ├─ 5. S3 → store PDF/XML
+      └─ 6. SES → send pre-signed URL to recipient
+
+ EventBridge Scheduler (daily 6pm MX)
+      ↓
+ Lambda resumen_diario
+      ├─ query GSI fecha-estatus-index
+      └─ SES → daily summary email to business
 ```
 
 </details>
@@ -52,39 +61,53 @@ factufast/
 ├── backend/
 │   ├── src/
 │   │   ├── handlers/
-│   │   │   └── crear_factura.py     # Main Lambda handler
+│   │   │   ├── crear_factura.py        # Main Lambda handler
+│   │   │   └── resumen_diario.py       # Daily summary Lambda
 │   │   ├── services/
-│   │   │   └── facturama.py         # Facturama API client
+│   │   │   └── facturama.py            # Facturama API client
 │   │   └── utils/
-│   │       ├── db.py                # DynamoDB write helpers
-│   │       ├── validators.py        # RFC, postal code, tax regime validation
-│   │       └── response.py          # HTTP 200/400/500 helpers
+│   │       ├── db.py                   # DynamoDB helpers (ConditionExpression, TTL)
+│   │       ├── s3.py                   # S3 upload + pre-signed URL
+│   │       ├── email.py                # SES v2 send
+│   │       ├── validators.py           # RFC, postal code, tax regime validation
+│   │       └── response.py             # HTTP 200/400/500 helpers
 │   ├── layers/python/
-│   │   └── requirements.txt         # Dependencies packaged as Lambda Layer
+│   │   └── requirements.txt            # Lambda Layer dependencies
 │   ├── events/
-│   │   └── crear_factura.json       # Test event for sam local invoke
+│   │   └── crear_factura.json          # Test event for sam local invoke
 │   ├── tests/
-│   │   └── conftest.py
+│   │   └── conftest.py                 # moto fixtures (DynamoDB + S3)
 │   ├── requirements.txt
 │   ├── samconfig.toml
-│   └── template.yaml                # SAM IaC (Lambda + API GW + DynamoDB)
-├── frontend/                        # React Native app (Expo)
-│   ├── app/
-│   │   ├── index.tsx                # Main screen (invoice form)
-│   │   └── resultado.tsx            # Result screen (folio + PDF/XML links)
-│   ├── components/
-│   │   └── CampoFormulario.tsx      # Reusable form field component
-│   ├── services/
-│   │   └── api.ts                   # API Gateway fetch (single connection point to backend)
-│   ├── constants/
-│   │   └── regimenes.ts             # SAT tax regime catalog
-│   ├── app.json                     # Expo config
-│   ├── package.json
-│   └── tsconfig.json
-├── amplify.yml                      # Amplify CI/CD build spec
-├── .env.example                     # Local dev environment variables
-├── .gitignore
-└── proyecto-facturacion-mvp.md      # Full technical reference document (Spanish)
+│   └── template.yaml                   # SAM IaC
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── layout/
+│   │   │   │   └── Header.tsx
+│   │   │   └── ui/
+│   │   │       └── ErrorBoundary.tsx
+│   │   ├── pages/
+│   │   │   ├── factura/
+│   │   │   │   ├── Formulario.tsx      # CFDI form (RFC, CP, regime, email)
+│   │   │   │   └── Resultado.tsx       # Result screen (UUID + PDF/XML)
+│   │   │   └── auth/                   # (ready for Login)
+│   │   ├── services/
+│   │   │   └── api.ts                  # API Gateway fetch client
+│   │   ├── constants/
+│   │   │   └── regimenes.ts            # SAT tax regime catalog (19 regimes)
+│   │   ├── hooks/                      # (ready for custom hooks)
+│   │   └── types/                      # (ready for shared types)
+│   ├── index.html
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   └── package.json
+├── scripts/
+│   ├── cargar_csd.py                   # Upload test CSD to Facturama (one-time)
+│   └── test_timbrado.py                # Standalone stamp test (no AWS needed)
+├── amplify.yml                         # Amplify CI/CD build spec
+├── .env.example
+└── proyecto-facturacion-mvp.md         # Full technical reference (Spanish)
 ```
 
 ---
@@ -94,31 +117,24 @@ factufast/
 - [AWS CLI](https://aws.amazon.com/cli/) configured (`aws configure`)
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 - Python 3.12
+- Node.js 18+
 - [Facturama sandbox](https://apisandbox.facturama.mx) account
 
 ---
 
 ## Setup
 
-### 1. Store Facturama credentials in SSM
+### 1. Store credentials in SSM
 
 ```bash
-aws ssm put-parameter \
-  --name /factufast/facturama_user \
-  --value "YOUR_SANDBOX_USER" \
-  --type SecureString
-
-aws ssm put-parameter \
-  --name /factufast/facturama_pass \
-  --value "YOUR_SANDBOX_PASS" \
-  --type SecureString
+aws ssm put-parameter --name /factufast/facturama_user --value "YOUR_USER" --type SecureString
+aws ssm put-parameter --name /factufast/facturama_pass --value "YOUR_PASS" --type SecureString
+aws ssm put-parameter --name /factufast/ses_from_email --value "you@yourdomain.com" --type SecureString
 ```
 
-### 2. Upload the test CSD to Facturama (one-time)
+### 2. Upload test CSD to Facturama (one-time)
 
 ```bash
-# Run locally with a Python script before deploying
-# See section 4.1 of proyecto-facturacion-mvp.md
 python scripts/cargar_csd.py
 ```
 
@@ -133,18 +149,34 @@ cp .env.example .env
 
 ## Deploy
 
+### Backend
+
 ```bash
 cd backend
-
-# First time
 sam build
-sam deploy --guided
-
-# Subsequent deploys
-sam build && sam deploy
+sam deploy --guided   # first time — saves config to samconfig.toml
+sam build && sam deploy  # subsequent deploys
 ```
 
-SAM prints the `ApiUrl` at the end — paste it into `frontend/app.js`.
+SAM prints the `ApiUrl` at the end — add it to Amplify environment variables.
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev       # local dev server → http://localhost:5173
+npm run build     # production build → dist/
+```
+
+**AWS Amplify** — connect the repo and set these environment variables in the console:
+
+| Variable | Value |
+|---|---|
+| `VITE_API_URL` | API Gateway URL from SAM output |
+| `VITE_API_KEY` | API Key from API Gateway console |
+
+Add one rewrite rule: `/<*>` → `/index.html` (type: 404 rewrite) for SPA routing.
 
 ---
 
@@ -153,7 +185,7 @@ SAM prints the `ApiUrl` at the end — paste it into `frontend/app.js`.
 ```bash
 cd backend
 
-# Invoke Lambda with the test event
+# Invoke Lambda with test event
 sam local invoke CrearFacturaFunction --event events/crear_factura.json
 
 # Start local API (requires Docker)
@@ -164,8 +196,8 @@ sam local start-api
 
 ## Before End-to-End Testing
 
-1. **SES — verify identities**: AWS Console → SES → Verified identities. Verify both the sender email and the test recipient email. SES sandbox only sends to verified addresses.
-2. **SES — create Configuration Set**: SES → Configuration sets → create `factufast-config`.
+1. **SES — verify identities**: AWS Console → SES → Verified identities. Verify both sender and recipient emails (sandbox only sends to verified addresses).
+2. Configuration Sets (`factufast-config`, `factufast-resumen-config`) are created automatically by SAM — do not create manually.
 
 ---
 
@@ -175,19 +207,19 @@ sam local start-api
 |---|---|---|
 | Issuer RFC | `EKU9003173C9` (test) | Real business RFC |
 | CSD | Facturama test certificate | Real CSD issued by SAT |
-| Facturama account | Free, no paperwork | Paid subscription + activate Multi-issuer |
+| Facturama account | Free, no paperwork | Paid + Multi-issuer activated |
 | CFDI validity | None (apocryphal) | Legally valid before SAT |
-| Code | Same | Same — only the data changes |
 | Facturama URL | `apisandbox.facturama.mx` | `api.facturama.mx` |
-| SES | Sandbox (verified addresses only) | Verify full domain + DKIM/SPF/DMARC |
+| SES | Sandbox (verified addresses only) | Verified domain + DKIM/SPF/DMARC |
 
 ---
 
 ## Design Decisions
 
-- **DynamoDB On-Demand** — no RCU/WCU capacity planning; auto-scales and stays within Free Tier for low volumes.
-- **Single `put_item` after Facturama** — Lambda writes to DynamoDB after the stamping call, not before, avoiding a double-write on error.
-- **`ConditionExpression` on `put_item`** — prevents client retries from overwriting an already-saved record (`ConditionalCheckFailedException`).
-- **S3 pre-signed URL instead of PDF attachment** — SES sends a 24h download link; attaching binaries requires manual MIME construction.
-- **SSM Parameter Store** for Facturama credentials — no plaintext environment variables.
-- **RFC + postal code validation before the folio counter** — a bad RFC caught early means no wasted folio numbers.
+- **DynamoDB On-Demand** — no capacity planning; auto-scales within Free Tier for low volumes.
+- **Atomic folio counter** — `CountersTable` with `ADD` expression guarantees sequential folios without gaps even under concurrent requests.
+- **ConditionExpression on `put_item`** — prevents client retries from overwriting an already-saved record.
+- **S3 pre-signed URL (1h)** — avoids attaching binaries to SES; URL contains RFC and fiscal data so expiry respects LFPDPPP.
+- **Two SES Configuration Sets** — `factufast-config` (transactional) and `factufast-resumen-config` (batch) keep reputation metrics isolated.
+- **EventBridge Scheduler with `ScheduleExpressionTimezone`** — native Mexico City timezone support, no manual UTC offset calculation.
+- **SSM Parameter Store** — no plaintext credentials in environment variables or source code.
