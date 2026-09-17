@@ -100,7 +100,7 @@
     {
       "id": "fase-5",
       "name": "Frontend React Native (Expo)",
-      "status": "pending",
+      "status": "done",
       "depends_on": ["fase-4"],
       "branch": "fase-5/frontend-rn",
       "autonomous": false,

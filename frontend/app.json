@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "FactuFastAI",
+    "slug": "factufast-ai",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "factufast",
+    "platforms": ["android", "ios"],
+    "extra": {
+      "apiUrl": "",
+      "apiKey": ""
+    }
+  }
+}
