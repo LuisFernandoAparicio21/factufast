@@ -13,6 +13,10 @@ export interface FacturaResult {
 }
 
 const API_URL = import.meta.env.VITE_API_URL ?? ''
+// VITE_* variables are embedded in the JS bundle at build time — this key is publicly readable.
+// It is a rate-limit control key only, NOT a secret. Backend must enforce:
+//   1. API Gateway Usage Plan with per-key throttling
+//   2. CORS restricted to the Amplify domain (never *)
 const API_KEY = import.meta.env.VITE_API_KEY ?? ''
 
 export async function generarFactura(payload: FacturaPayload): Promise<FacturaResult> {
