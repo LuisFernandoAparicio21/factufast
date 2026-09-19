@@ -53,7 +53,7 @@ function StatCard({ label, value, icon, accent = 'blue' }: StatCardProps) {
   const valueColor = accent === 'red' && value > 0 ? 'text-red-600' : 'text-gray-900'
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-gray-300 transition-all duration-200">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-gray-300 transition-shadow duration-200">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-medium text-gray-500 mb-1">{label}</p>

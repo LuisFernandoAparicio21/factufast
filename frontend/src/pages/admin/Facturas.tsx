@@ -55,6 +55,7 @@ export function AdminFacturas() {
             <input
               type="text"
               placeholder="RFC emisor…"
+              aria-label="Filtrar por RFC emisor"
               value={rfcEmisor}
               onChange={e => setFiltro('rfc_emisor', e.target.value)}
               className="pl-8 pr-3 py-2 text-sm rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-44 font-mono"
@@ -65,6 +66,7 @@ export function AdminFacturas() {
             <input
               type="text"
               placeholder="RFC receptor…"
+              aria-label="Filtrar por RFC receptor"
               value={rfcReceptor}
               onChange={e => setFiltro('rfc_receptor', e.target.value)}
               className="pl-8 pr-3 py-2 text-sm rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-44 font-mono"
@@ -72,6 +74,7 @@ export function AdminFacturas() {
           </div>
           <select
             value={estatus}
+            aria-label="Filtrar por estatus"
             onChange={e => setFiltro('estatus', e.target.value)}
             className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           >

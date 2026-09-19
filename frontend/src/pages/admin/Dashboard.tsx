@@ -63,7 +63,7 @@ export function AdminDashboard() {
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {statCards.map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-gray-300 transition-all duration-200">
+            <div key={label} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-gray-300 transition-shadow duration-200">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${
                 color === 'blue' ? 'bg-blue-50' : color === 'red' ? 'bg-red-50' : 'bg-gray-100'
               }`}>
