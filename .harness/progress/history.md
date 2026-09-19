@@ -4,6 +4,13 @@ Append-only log. One entry per Orchestrator delegation.
 
 ---
 
+## 2026-09-19T18:00:00Z
+- Action: Fases 6, 7 completadas — MVP cerrado
+- Status: fase-6 done (PR #6, 41/41 tests), fase-7 done (README + tag v1.0.0)
+- Notes: fase-4 bloqueada hasta deploy manual en AWS real (sam deploy + SES identities)
+
+---
+
 ## 2026-09-19T12:00:00Z
 - Action: Fases 2, 3, 4 completadas — backend SAM + Lambda completa
 - Status: fase-2 done (PR #3), fase-3 done (PR #4), fase-4 in-progress (manual AWS steps pending)

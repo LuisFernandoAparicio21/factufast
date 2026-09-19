@@ -80,7 +80,7 @@
     {
       "id": "fase-4",
       "name": "SES + S3 en AWS real (end-to-end)",
-      "status": "in-progress",
+      "status": "blocked",
       "depends_on": ["fase-3"],
       "branch": "fase-4/ses-s3-aws",
       "autonomous": false,
@@ -122,7 +122,9 @@
     {
       "id": "fase-6",
       "name": "Lambda resumen diario + EventBridge Scheduler",
-      "status": "pending",
+      "status": "done",
+      "pr_url": "https://github.com/LuisFernandoAparicio21/factufast/pull/6",
+      "notes": "41 tests. GSI query fecha-estatus-index en MX tz. SES factufast-resumen-config.",
       "depends_on": ["fase-5"],
       "branch": "fase-6/resumen-eventbridge",
       "autonomous": false,
@@ -146,7 +148,7 @@
     {
       "id": "fase-7",
       "name": "Cierre MVP (docs, tag v1.0.0)",
-      "status": "pending",
+      "status": "done",
       "depends_on": ["fase-6"],
       "branch": "fase-7/cierre-mvp",
       "autonomous": false,
