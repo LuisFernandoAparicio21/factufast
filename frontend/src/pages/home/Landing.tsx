@@ -194,13 +194,14 @@ function Problem() {
         <div>
           <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-3 block">El problema</span>
           <h2 className="text-3xl font-bold text-gray-900 mb-5 leading-snug">
-            ¿Te siguen llegando datos
-            <br />de facturación por WhatsApp?
+            ¿Tu PYME todavía
+            <br />factura de forma manual?
           </h2>
           <p className="text-gray-500 mb-7 leading-relaxed">
-            Copiar el RFC a mano, llenar el CFDI en el sistema, exportar el XML, mandarlo
-            por correo. Son 15 minutos que se repiten con cada cliente.
-            <span className="font-medium text-gray-700"> Con FactuFastAI son 3 segundos.</span>
+            Abrir el ERP, buscar el RFC del cliente, llenar el CFDI, exportar el XML,
+            mandarlo por correo. Un proceso arcaico que se repite con cada cliente y
+            consume tiempo que no tienes.
+            <span className="font-medium text-gray-700"> Con FactuFastAI tus clientes solicitan su factura solos — tú no tienes que tocar nada.</span>
           </p>
           <ul className="space-y-4">
             {pains.map(({ icon: Icon, text }) => (
