@@ -11,5 +11,14 @@ dist/
 *.p12
 *.key.bak
 csd-pruebas.zip
+csd-pruebas/
 *.cer
 *.key
+
+# Archivos locales de herramientas y visualizaciones
+factufast-architecture*.html
+factufast-architecture*.json
+factufast-architecture*.png
+skills-lock.json
+.agents/
+.claude/

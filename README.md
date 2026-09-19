@@ -158,7 +158,14 @@ sam deploy --guided   # first time — saves config to samconfig.toml
 sam build && sam deploy  # subsequent deploys
 ```
 
-SAM prints the `ApiUrl` at the end — add it to Amplify environment variables.
+SAM prints the `ApiUrl` at the end. Retrieve the API key value with:
+
+```bash
+aws apigateway get-api-keys --include-values \
+  --query "items[0].value" --output text
+```
+
+Add both to Amplify environment variables.
 
 ### Frontend
 
@@ -185,7 +192,13 @@ Add one rewrite rule: `/<*>` → `/index.html` (type: 404 rewrite) for SPA routi
 ```bash
 cd backend
 
-# Invoke Lambda with test event
+# Unit tests (moto mocks — no Docker, no AWS needed)
+pip install -r requirements.txt
+python -m pytest
+# Expected: 41 passed
+
+# Invoke Lambda with test event (requires Docker + sam build)
+sam build
 sam local invoke CrearFacturaFunction --event events/crear_factura.json
 
 # Start local API (requires Docker)

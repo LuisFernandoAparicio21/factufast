@@ -33,7 +33,7 @@ def handler(event, context):
 
         # Step 3: Facturama stamp
         try:
-            resultado = timbrar_factura(body)
+            resultado = timbrar_factura(body, folio)
         except Exception as exc:
             logger.error("Facturama error folio=%s: %s", folio, exc)
             guardar_error(body, folio)
