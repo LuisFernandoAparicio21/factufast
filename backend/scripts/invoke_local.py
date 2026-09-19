@@ -36,13 +36,26 @@ import os
 import sys
 from contextlib import contextmanager
 
+# Fuerza UTF-8 en Windows (evita UnicodeEncodeError con caracteres especiales)
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
 # src/ al path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../src"))
 
-# Carga .env si existe (python-dotenv opcional)
+# Carga .env — busca en backend/ y luego en la raíz del repo
 try:
     from dotenv import load_dotenv
-    load_dotenv(os.path.join(os.path.dirname(__file__), "../.env"))
+    _backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for _candidate in [
+        os.path.join(_backend_dir, ".env"),           # backend/.env
+        os.path.join(_backend_dir, "..", ".env"),     # repo root .env
+    ]:
+        if os.path.exists(_candidate):
+            load_dotenv(_candidate)
+            break
 except ImportError:
     pass
 
@@ -167,10 +180,13 @@ def main():
     )
     parser.add_argument("--mode",    choices=["mock", "aws"], default="mock",
                         help="mock = AWS con moto | aws = AWS real (requiere sam deploy)")
+    # Datos del receptor de prueba — XAXX010101000 = Público en General (sin validación SAT)
     parser.add_argument("--rfc",     default="XAXX010101000")
     parser.add_argument("--nombre",  default="PUBLICO EN GENERAL")
-    parser.add_argument("--cp",      default="65000")
+    parser.add_argument("--cp",      default="29000")
     parser.add_argument("--regimen", default="616")
+    parser.add_argument("--cfdi-use", default="S01",
+                        help="Uso del CFDI (default S01 para publico en general)")
     parser.add_argument("--email",   default="",
                         help="Si se pasa, el handler intenta enviar correo SES")
     args = parser.parse_args()
@@ -182,19 +198,20 @@ def main():
         "nombre":         args.nombre,
         "codigo_postal":  args.cp,
         "regimen_fiscal": args.regimen,
+        "cfdi_use":       args.cfdi_use,
     }
     if args.email:
         payload["email_receptor"] = args.email
 
     aws_label = "moto (local, sin Docker)" if args.mode == "mock" else f"AWS REAL (tabla: {os.environ.get('DYNAMODB_TABLE', '?')})"
 
-    print("\n" + "─" * 60)
+    print("\n" + "-" * 60)
     print("  PRUEBA DE INTEGRACIÓN — FactuFastAI")
-    print("─" * 60)
+    print("-" * 60)
     print(f"  Payload       : {json.dumps(payload, ensure_ascii=False)}")
     print(f"  Facturama     : sandbox REAL → apisandbox.facturama.mx")
     print(f"  AWS services  : {aws_label}")
-    print("─" * 60 + "\n")
+    print("-" * 60 + "\n")
 
     ctx = _mock_aws_ctx() if args.mode == "mock" else _real_aws_ctx()
 
@@ -208,15 +225,15 @@ def main():
         print(f"  body: {json.dumps(body, indent=4, ensure_ascii=False)}")
 
         if status == 200:
-            print("\n  ✓ Factura timbrada")
+            print("\n  OK Factura timbrada")
             print(f"    folio_fiscal : {body.get('folio_fiscal')}")
             print(f"    pdf_url      : {body.get('pdf_url')}")
             # Muestra el item en DynamoDB para confirmar persistencia
             _print_dynamodb_item(args.mode, args.rfc, body.get("folio_fiscal", ""))
         else:
-            print(f"\n  ✗ Error: {body.get('error')}")
+            print(f"\n  ERROR: {body.get('error')}")
 
-    print("\n" + "─" * 60 + "\n")
+    print("\n" + "-" * 60 + "\n")
     sys.exit(0 if status == 200 else 1)
 
 
