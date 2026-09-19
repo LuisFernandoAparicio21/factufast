@@ -28,9 +28,6 @@ export function Header({ variant = 'default', onMenuToggle }: HeaderProps) {
               FactuFast<span className="text-indigo-600 font-bold">AI</span>
             </span>
           </div>
-          <span className="text-xs font-medium bg-amber-50 text-amber-600 border border-amber-200 px-2 py-0.5 rounded-full">
-            Sandbox
-          </span>
           {variant === 'admin' && (
             <span className="text-xs font-medium bg-violet-50 text-violet-600 border border-violet-200 px-2 py-0.5 rounded-full">
               Admin

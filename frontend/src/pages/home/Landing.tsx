@@ -17,9 +17,6 @@ function LandingNav() {
           <span className="font-semibold text-white text-[15px] tracking-tight">
             FactuFast<span className="text-indigo-400 font-bold">AI</span>
           </span>
-          <span className="hidden sm:inline text-[10px] font-medium bg-amber-500/15 text-amber-300 border border-amber-500/25 px-2 py-0.5 rounded-full ml-1">
-            Sandbox
-          </span>
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -153,7 +150,7 @@ function Hero() {
             </Link>
 
             <p className="text-xs text-slate-600 mb-3">
-              Sin tarjeta de crédito · Sandbox gratuito · CFDI firmado por Facturama
+              Sin tarjeta de crédito · Gratis para comenzar · CFDI firmado por Facturama
             </p>
 
             {/* Separator */}
@@ -379,9 +376,6 @@ function HowItWorks() {
               </div>
             ))}
           </div>
-          <div className="px-5 py-3 bg-gray-50 border-t border-gray-100">
-            <p className="text-xs text-gray-400">* MVP sandbox — no apto para producción aún</p>
-          </div>
         </div>
       </div>
     </section>
@@ -451,10 +445,10 @@ function Footer() {
             <Receipt size={12} className="text-white" strokeWidth={2.5} />
           </div>
           <span className="text-xs text-slate-500">
-            FactuFast<strong className="text-indigo-400">AI</strong> · MVP de aprendizaje AWS
+            FactuFast<strong className="text-indigo-400">AI</strong> · Facturación electrónica CFDI 4.0
           </span>
         </div>
-        <span className="text-xs text-slate-700">Facturama Sandbox · CFDI 4.0 · No usar en producción</span>
+        <span className="text-xs text-slate-700">© 2026 FactuFastAI · México</span>
       </div>
     </footer>
   )
