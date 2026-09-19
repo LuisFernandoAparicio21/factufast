@@ -152,11 +152,27 @@ Resources:
     Type: AWS::SES::ConfigurationSet
     Properties:
       Name: factufast-config
+      SendingOptions:
+        SendingEnabled: true
+      ReputationOptions:
+        ReputationMetricsEnabled: true
+      SuppressionOptions:
+        SuppressedReasons:
+          - BOUNCE
+          - COMPLAINT
 
   ResumenConfigSet:
     Type: AWS::SES::ConfigurationSet
     Properties:
       Name: factufast-resumen-config
+      SendingOptions:
+        SendingEnabled: true
+      ReputationOptions:
+        ReputationMetricsEnabled: true
+      SuppressionOptions:
+        SuppressedReasons:
+          - BOUNCE
+          - COMPLAINT
 
 # ─── Outputs ────────────────────────────────────────────────────────────────
 
