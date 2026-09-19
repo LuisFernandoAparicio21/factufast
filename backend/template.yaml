@@ -18,10 +18,16 @@ Globals:
     Environment:
       Variables:
         DYNAMODB_TABLE: !Ref FacturasTable
-        FACTURAMA_USER: !Sub "{{resolve:ssm:/factufast/facturama_user}}"
-        FACTURAMA_PASS: !Sub "{{resolve:ssm:/factufast/facturama_pass}}"
+        COUNTERS_TABLE: !Ref CountersTable
+        S3_BUCKET: !Ref FacturasBucket
+        FACTURAMA_USER: "{{resolve:ssm:/factufast/facturama_user}}"
+        FACTURAMA_PASS: "{{resolve:ssm:/factufast/facturama_pass}}"
+        SES_FROM_EMAIL: "{{resolve:ssm:/factufast/ses_from_email}}"
+        SES_CONFIG_SET: factufast-config
 
 Resources:
+
+  # ─── Layer ────────────────────────────────────────────────────────────────
 
   DepsLayer:
     Type: AWS::Serverless::LayerVersion
@@ -31,6 +37,26 @@ Resources:
     Metadata:
       BuildMethod: python3.12
 
+  # ─── API Gateway ──────────────────────────────────────────────────────────
+
+  FactufastApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Env
+      Auth:
+        ApiKeyRequired: true
+        UsagePlan:
+          CreateUsagePlan: PER_API
+          Description: !Sub "FactuFastAI rate-limit key (${Env})"
+          Quota:
+            Limit: 10000
+            Period: MONTH
+          Throttle:
+            BurstLimit: 50
+            RateLimit: 10
+
+  # ─── Lambda ───────────────────────────────────────────────────────────────
+
   CrearFacturaFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -39,12 +65,27 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref FacturasTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CountersTable
+        - S3CrudPolicy:
+            BucketName: !Ref FacturasBucket
+        - SESSendEmailPolicy:
+            IdentityName: "{{resolve:ssm:/factufast/ses_from_email}}"
       Events:
         PostFactura:
           Type: Api
           Properties:
+            RestApiId: !Ref FactufastApi
             Path: /facturas
             Method: POST
+
+  CrearFacturaFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${CrearFacturaFunction}"
+      RetentionInDays: 30
+
+  # ─── DynamoDB ─────────────────────────────────────────────────────────────
 
   FacturasTable:
     Type: AWS::DynamoDB::Table
@@ -56,13 +97,144 @@ Resources:
           AttributeType: S
         - AttributeName: folio_fiscal
           AttributeType: S
+        - AttributeName: fecha_dia
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
       KeySchema:
         - AttributeName: rfc
           KeyType: HASH
         - AttributeName: folio_fiscal
           KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: fecha-estatus-index
+          KeySchema:
+            - AttributeName: fecha_dia
+              KeyType: HASH
+            - AttributeName: timestamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  CountersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "factufast-counters-${Env}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: rfc_emisor
+          AttributeType: S
+      KeySchema:
+        - AttributeName: rfc_emisor
+          KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+
+  # ─── S3 ───────────────────────────────────────────────────────────────────
+
+  FacturasBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: true
+            ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  FacturasBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FacturasBucket
+      PolicyDocument:
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !Sub "arn:aws:s3:::${FacturasBucket}"
+              - !Sub "arn:aws:s3:::${FacturasBucket}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": "false"
+
+  # ─── CloudWatch Alarms ────────────────────────────────────────────────────
+
+  CrearFacturaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "factufast-lambda-errors-${Env}"
+      AlarmDescription: Lambda errors > 5 en 1 minuto
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref CrearFacturaFunction
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  # ─── SES Configuration Sets ───────────────────────────────────────────────
+
+  FactufastConfigSet:
+    Type: AWS::SES::ConfigurationSet
+    Properties:
+      Name: factufast-config
+      SendingOptions:
+        SendingEnabled: true
+      ReputationOptions:
+        ReputationMetricsEnabled: true
+      SuppressionOptions:
+        SuppressedReasons:
+          - BOUNCE
+          - COMPLAINT
+
+  ResumenConfigSet:
+    Type: AWS::SES::ConfigurationSet
+    Properties:
+      Name: factufast-resumen-config
+      SendingOptions:
+        SendingEnabled: true
+      ReputationOptions:
+        ReputationMetricsEnabled: true
+      SuppressionOptions:
+        SuppressedReasons:
+          - BOUNCE
+          - COMPLAINT
+
+# ─── Outputs ────────────────────────────────────────────────────────────────
 
 Outputs:
   ApiUrl:
     Description: Endpoint del API Gateway
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/facturas"
+    Value: !Sub "https://${FactufastApi}.execute-api.${AWS::Region}.amazonaws.com/${Env}/facturas"
+
+  FacturasBucketName:
+    Description: Nombre del bucket S3 de facturas
+    Value: !Ref FacturasBucket
+
+  FacturasTableName:
+    Description: Nombre de la tabla DynamoDB de facturas
+    Value: !Ref FacturasTable
+
+  CountersTableName:
+    Description: Nombre de la tabla DynamoDB de contadores
+    Value: !Ref CountersTable
