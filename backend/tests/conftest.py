@@ -80,8 +80,8 @@ def s3_bucket(aws_mock):
 
 @pytest.fixture
 def ses_mock(aws_mock):
+    # moto sesv2 no requiere pre-registrar identidades para send_email
     ses = boto3.client("sesv2", region_name="us-east-1")
-    ses.create_email_identity(EmailIdentity=os.environ["SES_FROM_EMAIL"])
     yield ses
 
 
@@ -98,10 +98,16 @@ def full_aws(facturas_table, counters_table, s3_bucket, ses_mock):
 
 @pytest.fixture(autouse=True)
 def reset_db_cache():
-    """Limpia los clientes boto3 cacheados en db.py y s3.py entre tests."""
+    """Limpia los clientes boto3 cacheados entre tests."""
     import utils.db as db_module
     db_module._table = None
     db_module._counters_table = None
+    try:
+        import handlers.resumen_diario as rd
+        rd._table = None
+        rd._ses = None
+    except ImportError:
+        pass
     yield
     db_module._table = None
     db_module._counters_table = None
