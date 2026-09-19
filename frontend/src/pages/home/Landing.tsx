@@ -53,7 +53,7 @@ function MockCfdiCard() {
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-900">CFDI timbrado</p>
-            <p className="text-xs text-emerald-600">Válido ante el SAT · 2.3 s</p>
+            <p className="text-xs text-emerald-600">Válido ante el SAT · en segundos</p>
           </div>
         </div>
 
@@ -79,12 +79,12 @@ function MockCfdiCard() {
 
         {/* Download buttons */}
         <div className="px-5 py-3.5 flex items-center gap-3">
-          <a className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg py-2 transition-colors cursor-pointer">
+          <div aria-hidden="true" className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded-lg py-2">
             <FileDown size={13} /> PDF
-          </a>
-          <a className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg py-2 transition-colors cursor-pointer">
+          </div>
+          <div aria-hidden="true" className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg py-2">
             <FileCode2 size={13} /> XML
-          </a>
+          </div>
           <p className="text-[10px] text-gray-400 shrink-0">enviado a correo ✓</p>
         </div>
       </div>
@@ -249,7 +249,7 @@ function Problem() {
               Solicitar factura →
             </button>
             <p className="text-center text-xs text-emerald-600 font-medium flex items-center justify-center gap-1.5">
-              <Check size={12} /> CFDI timbrado y enviado a tu correo en 3 s
+              <Check size={12} /> CFDI timbrado y enviado a tu correo en segundos
             </p>
           </div>
         </div>
@@ -265,7 +265,7 @@ function Features() {
     {
       icon: <Zap size={18} className="text-blue-500" />,
       accent: 'bg-blue-50 border-blue-100',
-      title: 'Timbrado en < 3 s',
+      title: 'Timbrado en segundos',
       desc: 'CFDI 4.0 válido ante el SAT, firmado por Facturama (PAC autorizado). Sin colas, sin esperas.',
     },
     {
@@ -325,7 +325,7 @@ function HowItWorks() {
       n: '03',
       title: 'El CFDI llega solo',
       desc: 'El sistema timbra en Facturama, guarda en S3 y manda PDF + XML al correo del cliente.',
-      time: '3 seg',
+      time: 'segundos',
     },
   ]
   return (
