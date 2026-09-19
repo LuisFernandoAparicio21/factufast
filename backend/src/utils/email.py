@@ -148,3 +148,42 @@ def enviar_factura_al_receptor(
             raise
         # 5xx / throttling — propagar; Lambda retry policy lo maneja
         raise
+
+
+def enviar_link(
+    email_receptor: str,
+    presigned_url: str,
+    folio_fiscal: str,
+) -> None:
+    """Simple wrapper used by crear_factura handler. SES failure is non-fatal."""
+    from_email = os.environ["SES_FROM_EMAIL"]
+    config_set = os.environ["SES_CONFIG_SET"]
+    subject = f"Tu factura está lista — descarga aquí tu CFDI"
+    text_body = (
+        f"Tu factura ha sido timbrada exitosamente.\n\n"
+        f"UUID: {folio_fiscal}\n"
+        f"Descarga PDF (válido 1 hora): {presigned_url}\n\n"
+        f"FactuFastAI · CFDI 4.0"
+    )
+    try:
+        _get_client().send_email(
+            FromEmailAddress=from_email,
+            Destination={"ToAddresses": [email_receptor]},
+            Content={
+                "Simple": {
+                    "Subject": {"Data": subject, "Charset": "UTF-8"},
+                    "Body": {"Text": {"Data": text_body, "Charset": "UTF-8"}},
+                }
+            },
+            ConfigurationSetName=config_set,
+        )
+    except ClientError as e:
+        code = e.response["Error"]["Code"]
+        if code in (
+            "MessageRejected",
+            "MailFromDomainNotVerifiedException",
+            "ConfigurationSetDoesNotExistException",
+            "AccountSendingPausedException",
+        ):
+            raise
+        raise
