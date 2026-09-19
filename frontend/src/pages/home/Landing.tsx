@@ -125,12 +125,13 @@ function Hero() {
               CFDI 4.0 · Facturama PAC · AWS
             </span>
             <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight leading-[1.12] mb-5">
-              Tu PYME emite
+              Facturación electrónica
               <br />
-              facturas en{' '}
               <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">
-                3 segundos
+                que trabaja sola
               </span>
+              <br />
+              mientras tú trabajas en lo tuyo.
             </h1>
             <p className="text-lg text-slate-400 mb-3 leading-relaxed max-w-lg">
               Un enlace público. Tu cliente llena 4 datos fiscales.
