@@ -85,6 +85,33 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${CrearFacturaFunction}"
       RetentionInDays: 30
 
+  ResumenDiarioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers.resumen_diario.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FacturasTable
+        - SESSendEmailPolicy:
+            IdentityName: "{{resolve:ssm:/factufast/ses_from_email}}"
+      Environment:
+        Variables:
+          SES_RESUMEN_CONFIG_SET: factufast-resumen-config
+      Events:
+        DailySchedule:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: "cron(0 18 * * ? *)"
+            ScheduleExpressionTimezone: America/Mexico_City
+            Description: Resumen diario facturas 6pm hora México
+
+  ResumenDiarioFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ResumenDiarioFunction}"
+      RetentionInDays: 30
+
   # ─── DynamoDB ─────────────────────────────────────────────────────────────
 
   FacturasTable:
