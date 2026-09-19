@@ -21,7 +21,7 @@ export function Resultado() {
             Esta página requiere haber generado una factura previamente.
           </p>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/factura')}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
           >
             <ArrowLeft size={15} />
@@ -114,7 +114,7 @@ export function Resultado() {
         {/* Back link */}
         <div className="text-center">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/factura')}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
           >
             <ArrowLeft size={15} />

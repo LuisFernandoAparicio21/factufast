@@ -106,7 +106,7 @@ export function Formulario() {
         regimen_fiscal_receptor: campos.regimen_fiscal_receptor,
         email_receptor: campos.email_receptor.trim(),
       })
-      navigate('/resultado', { state: result })
+      navigate('/factura/resultado', { state: result })
     } catch (err) {
       setApiError(err instanceof Error ? err.message : 'Error al generar la factura')
     } finally {

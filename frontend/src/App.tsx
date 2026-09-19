@@ -3,6 +3,8 @@ import { Header } from './components/layout/Header'
 import { PymeLayout } from './components/layout/PymeLayout'
 import { AdminLayout } from './components/layout/AdminLayout'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
+import { Landing } from './pages/home/Landing'
+import { RegistroPyme } from './pages/home/Registro'
 import { Formulario } from './pages/factura/Formulario'
 import { Resultado } from './pages/factura/Resultado'
 import { PymeDashboard } from './pages/pyme/Dashboard'
@@ -16,9 +18,15 @@ export default function App() {
   return (
     <ErrorBoundary>
       <Routes>
-        {/* Vista 3 — Receptor (pública) */}
+        {/* Landing page pública */}
+        <Route path="/" element={<Landing />} />
+
+        {/* Registro de nuevas PYMEs */}
+        <Route path="/registro" element={<RegistroPyme />} />
+
+        {/* Vista receptor (pública) */}
         <Route
-          path="/"
+          path="/factura"
           element={
             <div className="min-h-screen bg-gray-50">
               <Header />
@@ -27,7 +35,7 @@ export default function App() {
           }
         />
         <Route
-          path="/resultado"
+          path="/factura/resultado"
           element={
             <div className="min-h-screen bg-gray-50">
               <Header />
@@ -42,7 +50,6 @@ export default function App() {
           <Route path="dashboard"     element={<PymeDashboard />} />
           <Route path="facturas"      element={<PymeFacturas />} />
           <Route path="configuracion" element={<PymeConfiguracion />} />
-          {/* Ruta desconocida dentro de /pyme → dashboard */}
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
 
@@ -52,11 +59,10 @@ export default function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="emisores"  element={<AdminEmisores />} />
           <Route path="facturas"  element={<AdminFacturas />} />
-          {/* Ruta desconocida dentro de /admin → dashboard */}
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
 
-        {/* 404 global → formulario público */}
+        {/* 404 global → landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ErrorBoundary>
