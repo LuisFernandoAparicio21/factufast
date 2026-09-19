@@ -25,7 +25,7 @@ Serverless MVP for generating CFDI 4.0 electronic invoices (Mexico) built on AWS
 
 ## Architecture
 
-![FactuFastAI Architecture](FactuFast.png)
+<img src="FactuFast.png" alt="FactuFastAI Architecture" width="800" />
 
 <details>
 <summary>Text version</summary>

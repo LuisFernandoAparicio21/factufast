@@ -1,136 +1,113 @@
-# Fase 5 Spec — Frontend React Native (Expo)
+# Fase 5 Spec — Frontend React 18 + Vite 5
+
+> **Pivot:** Esta fase originalmente era React Native (Expo). Se cambió a React 18 + Vite 5 SPA
+> deployada en AWS Amplify (PR #1 Expo cerrado → PR #2 Vite abierto).
 
 ## Exit Criteria
 
-App corre en Expo Go en dispositivo real y genera una factura de punta a punta (formulario → POST → pantalla de resultado con folio fiscal y link PDF).
+App deployada en AWS Amplify. Formulario CFDI 4.0 genera una factura de punta a punta en navegador:
+formulario → POST a API Gateway → pantalla de resultado con UUID (folio fiscal) + links de descarga PDF/XML.
 
 ## Verification Command
 
 ```bash
 cd frontend
-npx expo start
-# Scan QR code with Expo Go on physical device
-# Fill form → tap "Generar Factura" → resultado screen shows folio + PDF link
+npm run dev
+# Abrir http://localhost:5173
+# Llenar formulario → click "Generar factura" → resultado muestra folio + links
 ```
 
-## Files to Create
+## Stack
+
+| Capa | Tecnología |
+|------|-----------|
+| Framework | React 18.3 + TypeScript 5.4 (strict) |
+| Build | Vite 5.3 |
+| Routing | React Router DOM 6.23 |
+| Estilos | Tailwind CSS 3.4 + PostCSS |
+| Iconos | Lucide React 0.400 |
+| Deploy | AWS Amplify (`amplify.yml`: npm ci → npm run build → frontend/dist) |
+
+## Files Created
 
 - `frontend/package.json`
-- `frontend/app.json`
+- `frontend/vite.config.ts`
 - `frontend/tsconfig.json`
-- `frontend/constants/regimenes.ts`
-- `frontend/services/api.ts`
-- `frontend/components/CampoFormulario.tsx`
-- `frontend/app/index.tsx`
-- `frontend/app/resultado.tsx`
+- `frontend/tailwind.config.js`
+- `frontend/index.html`
+- `frontend/src/main.tsx` — React 18 root
+- `frontend/src/App.tsx` — BrowserRouter + routes + ErrorBoundary
+- `frontend/src/index.css` — Tailwind imports + Google Fonts (Inter)
+- `frontend/src/constants/regimenes.ts` — 19 regímenes SAT `{ value, label }`
+- `frontend/src/services/api.ts` — `generarFactura()`, tipos `FacturaPayload` / `FacturaResult`
+- `frontend/src/components/layout/Header.tsx` — logo, badge Sandbox, CFDI 4.0 label
+- `frontend/src/components/ui/ErrorBoundary.tsx` — class component, previene pantalla blanca
+- `frontend/src/pages/factura/Formulario.tsx` — formulario con validación inline por campo
+- `frontend/src/pages/factura/Resultado.tsx` — UUID + botones PDF/XML + "Generar otra"
 
-## Files to NOT Touch
+## Files Modified
 
-All backend files, template.yaml, scripts/, docs/.
+- `amplify.yml` — `appRoot: frontend`, `baseDirectory: dist`
 
 ## Design Decisions
 
-**D1:** Expo Router (file-based routing via `app/` directory), not React Navigation
-- Rejected: React Navigation with manual stack
-- Why: Expo Router ships with Expo SDK 50+; no extra setup; `app/index.tsx` = home, `app/resultado.tsx` = result screen
+**D1:** React 18 + Vite en lugar de React Native / Expo
+- Rechazado: Expo requiere dispositivo físico o emulador; más fricción para MVP web
+- Por qué: SPA en navegador es suficiente para el MVP; deploy en Amplify es trivial
 
-**D2:** `API_URL` and `API_KEY` from `Constants.expoConfig.extra` (app.json `extra` field)
-- Rejected: hardcoded strings in `api.ts`
-- Why: never hardcode secrets; `app.json` extra is not committed with real values (use `.env` + `app.config.js`)
+**D2:** Estado local (hooks) — sin Redux ni Context
+- Por qué: solo 4 campos de formulario y un resultado; no hay estado compartido entre rutas
 
-**D3:** `x-api-key` header always sent in `api.ts`
-- Rejected: no API key (endpoint would be public)
-- Why: API Gateway requires it; missing header → 403
+**D3:** Credenciales via `import.meta.env` (`VITE_API_URL`, `VITE_API_KEY`)
+- Rechazado: hardcoded en `api.ts`
+- Por qué: Amplify inyecta env vars en build time; nunca en código fuente
 
-**D4:** `CampoFormulario.tsx` is a controlled input with label + error prop
-- Rejected: raw `TextInput` in index.tsx
-- Why: reusable across 4 fields; error state is uniform
+**D4:** Validación en frontend Y backend (no solo uno)
+- Frontend: feedback inmediato al usuario (RFC regex, CP 5 dígitos, email, régimen)
+- Backend: autoridad de verdad (misma regex en `validators.py`)
 
-**D5:** `regimenes.ts` exports a flat array of `{ value: string; label: string }`
-- Rejected: object/enum
-- Why: directly consumable by Picker/Select component without transformation
+**D5:** `x-api-key` header siempre en `api.ts`
+- Por qué: API Gateway lo exige; sin él → 403
 
-## The Surface
+## Surface
 
-### `frontend/services/api.ts`
+### Routes (`App.tsx`)
+- `/` → `<Formulario />` — form con 4 campos
+- `/resultado` → `<Resultado />` — estado vía `useLocation().state`
 
+### `api.ts`
 ```typescript
-export async function generarFactura(payload: {
-  rfc_receptor: string;
-  cp_receptor: string;
-  regimen_fiscal_receptor: string;
-  email_receptor: string;
-}): Promise<{ folio_fiscal: string; pdf_url: string }> {
-  // POST to API_URL with x-api-key header
-  // Throws on non-200
-}
+export async function generarFactura(payload: FacturaPayload): Promise<FacturaResult>
+// POST ${VITE_API_URL}/facturas con x-api-key header
+// Lanza Error con mensaje del backend en non-200
 ```
 
-### `frontend/components/CampoFormulario.tsx`
+### `Formulario.tsx`
+- Campos: `rfc_receptor`, `cp_receptor`, `regimen_fiscal_receptor` (select), `email_receptor`
+- Validación touched: solo muestra errores tras blur o submit
+- Loading state: deshabilita inputs y botón, spinner en botón
+- Error API: banner rojo con mensaje del servidor
+- Submit: `navigate('/resultado', { state: result })`
 
-```typescript
-interface Props {
-  label: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  error?: string;
-  keyboardType?: KeyboardTypeOptions;
-  placeholder?: string;
-}
-```
-
-### `frontend/app/index.tsx` (home screen)
-
-- 4 `CampoFormulario` inputs: RFC, CP, Régimen (Picker), Email
-- "Generar Factura" button
-- Loading state while POST is in-flight
-- On success → navigate to `resultado` with `folio_fiscal` + `pdf_url` as params
-- On error → show inline error message (generic, no API response body)
-
-### `frontend/app/resultado.tsx` (result screen)
-
-- Display: `folio_fiscal` UUID
-- Button: "Descargar PDF" → `Linking.openURL(pdf_url)`
-- Button: "Nueva Factura" → navigate back to index
-
-### `frontend/constants/regimenes.ts`
-
-23 SAT tax regimes, same list as `backend/src/utils/validators.py`:
-```typescript
-export const REGIMENES = [
-  { value: "601", label: "General de Ley Personas Morales" },
-  { value: "603", label: "Personas Morales con Fines no Lucrativos" },
-  // ... all 23
-];
-```
-
-### `frontend/app.json`
-
-```json
-{
-  "expo": {
-    "name": "FactuFastAI",
-    "slug": "factufast-ai",
-    "version": "1.0.0",
-    "extra": {
-      "apiUrl": "",
-      "apiKey": ""
-    }
-  }
-}
-```
+### `Resultado.tsx`
+- Guard: si no hay `location.state` → mensaje de error + link a formulario
+- Folio fiscal: `<code>` con botón copy-to-clipboard (feedback 2s)
+- Folio interno: `#00001` si el backend lo devuelve
+- Downloads: `<a target="_blank">` para PDF y XML (pre-signed S3 URLs)
+- CTA: "Generar otra factura" → `navigate('/')`
 
 ## Environment
 
-For local development, create `frontend/.env` (gitignored):
 ```
-EXPO_PUBLIC_API_URL=https://...execute-api.us-east-1.amazonaws.com/Prod
-EXPO_PUBLIC_API_KEY=...
+# frontend/.env.local (gitignored)
+VITE_API_URL=https://XXXXXXXX.execute-api.us-east-1.amazonaws.com/Prod
+VITE_API_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
+
+En Amplify: configurar las mismas vars en Console → Environment variables.
 
 ## Out of Scope
 
-- DEFERRED: EAS Build (APK distribution) — owner: Fase 7
-- DEFERRED: input validation UI (regex feedback per field) — owner: post-MVP
-- DEFERRED: offline support — owner: post-MVP
-- DEFERRED: `amplify.yml` update — owner: Fase 7 (or remove if only mobile)
+- DEFERRED: tests unitarios (Vitest + Testing Library) — post-MVP
+- DEFERRED: offline support — post-MVP
+- DEFERRED: EAS Build / APK — eliminado por pivot a web
