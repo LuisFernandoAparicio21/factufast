@@ -118,6 +118,8 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: ttl
         Enabled: true
+      SSESpecification:
+        SSEEnabled: true
 
   CountersTable:
     Type: AWS::DynamoDB::Table
@@ -130,6 +132,8 @@ Resources:
       KeySchema:
         - AttributeName: rfc_emisor
           KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
 
   # ─── S3 ───────────────────────────────────────────────────────────────────
 
@@ -141,10 +145,52 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
       BucketEncryption:
         ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
+          - BucketKeyEnabled: true
+            ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+
+  FacturasBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FacturasBucket
+      PolicyDocument:
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !Sub "arn:aws:s3:::${FacturasBucket}"
+              - !Sub "arn:aws:s3:::${FacturasBucket}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": "false"
+
+  # ─── CloudWatch Alarms ────────────────────────────────────────────────────
+
+  CrearFacturaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "factufast-lambda-errors-${Env}"
+      AlarmDescription: Lambda errors > 5 en 1 minuto
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref CrearFacturaFunction
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
 
   # ─── SES Configuration Sets ───────────────────────────────────────────────
 
