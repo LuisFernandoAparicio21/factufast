@@ -29,7 +29,7 @@
     {
       "id": "fase-2",
       "name": "Infraestructura SAM completa",
-      "status": "in-progress",
+      "status": "done",
       "depends_on": ["fase-1"],
       "branch": "fase-2/sam-infrastructure",
       "autonomous": false,
@@ -45,13 +45,13 @@
         "backend/template.yaml"
       ],
       "blocked_by": null,
-      "review_rounds": 0,
-      "pr_url": null
+      "review_rounds": 1,
+      "pr_url": "https://github.com/LuisFernandoAparicio21/factufast/pull/3"
     },
     {
       "id": "fase-3",
       "name": "Lambda completa (folio counter, S3, SES, ConditionExpression)",
-      "status": "pending",
+      "status": "done",
       "depends_on": ["fase-2"],
       "branch": "fase-3/lambda-complete",
       "autonomous": false,
@@ -73,13 +73,14 @@
         "backend/src/utils/response.py"
       ],
       "blocked_by": null,
-      "review_rounds": 0,
-      "pr_url": null
+      "review_rounds": 1,
+      "pr_url": "https://github.com/LuisFernandoAparicio21/factufast/pull/4",
+      "notes": "36/36 tests. Flujo completo: validate → folio ADD → Facturama → DynamoDB ConditionExpression → S3 presigned → SES. S3/SES no-fatales."
     },
     {
       "id": "fase-4",
       "name": "SES + S3 en AWS real (end-to-end)",
-      "status": "pending",
+      "status": "in-progress",
       "depends_on": ["fase-3"],
       "branch": "fase-4/ses-s3-aws",
       "autonomous": false,
@@ -92,7 +93,7 @@
       },
       "files_to_create": [],
       "files_to_modify": [],
-      "notes": "Manual AWS Console steps: verify SES identities. ConfigSets created by SAM.",
+      "notes": "Sin código. Pasos manuales: (1) sam deploy, (2) verificar identidades SES en consola, (3) obtener API key. Checklist en .harness/specs/fase-4/spec.md",
       "blocked_by": null,
       "review_rounds": 0,
       "pr_url": null
@@ -105,31 +106,14 @@
       "branch": "fase-5/frontend-react-vite",
       "autonomous": false,
       "spec": ".harness/specs/fase-5/spec.md",
-      "criterio_salida": "App desplegada en Amplify, formulario CFDI 4.0 genera factura de punta a punta en navegador (formulario → POST → pantalla resultado con UUID + links PDF/XML)",
+      "criterio_salida": "App desplegada en Amplify, formulario CFDI 4.0 genera factura de punta a punta en navegador",
       "skills": {
         "architect": ["react-expert", "ui-ux-pro-max"],
         "builder":   ["react-expert", "frontend-developer"],
         "reviewer":  ["react-doctor", "security-review"]
       },
-      "files_to_create": [
-        "frontend/package.json",
-        "frontend/vite.config.ts",
-        "frontend/tsconfig.json",
-        "frontend/tailwind.config.js",
-        "frontend/index.html",
-        "frontend/src/main.tsx",
-        "frontend/src/App.tsx",
-        "frontend/src/index.css",
-        "frontend/src/constants/regimenes.ts",
-        "frontend/src/services/api.ts",
-        "frontend/src/components/layout/Header.tsx",
-        "frontend/src/components/ui/ErrorBoundary.tsx",
-        "frontend/src/pages/factura/Formulario.tsx",
-        "frontend/src/pages/factura/Resultado.tsx"
-      ],
-      "files_to_modify": [
-        "amplify.yml"
-      ],
+      "files_to_create": [],
+      "files_to_modify": [],
       "blocked_by": null,
       "review_rounds": 1,
       "pr_url": "https://github.com/LuisFernandoAparicio21/factufast/pull/2",
@@ -161,7 +145,7 @@
     },
     {
       "id": "fase-7",
-      "name": "Cierre MVP (docs, EAS Build, tag v1.0.0)",
+      "name": "Cierre MVP (docs, tag v1.0.0)",
       "status": "pending",
       "depends_on": ["fase-6"],
       "branch": "fase-7/cierre-mvp",
@@ -173,9 +157,7 @@
         "builder":   ["devops-skills:github-actions-generator"],
         "reviewer":  ["react-doctor", "security-review"]
       },
-      "files_to_create": [
-        "frontend/eas.json"
-      ],
+      "files_to_create": [],
       "files_to_modify": [
         "README.md",
         "proyecto-facturacion-mvp.md"
