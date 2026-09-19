@@ -99,32 +99,41 @@
     },
     {
       "id": "fase-5",
-      "name": "Frontend React Native (Expo)",
-      "status": "pending",
+      "name": "Frontend React 18 + Vite 5",
+      "status": "in-progress",
       "depends_on": ["fase-4"],
-      "branch": "fase-5/frontend-rn",
+      "branch": "fase-5/frontend-react-vite",
       "autonomous": false,
       "spec": ".harness/specs/fase-5/spec.md",
-      "criterio_salida": "App corre en Expo Go en dispositivo real y genera una factura de punta a punta",
+      "criterio_salida": "App desplegada en Amplify, formulario CFDI 4.0 genera factura de punta a punta en navegador (formulario → POST → pantalla resultado con UUID + links PDF/XML)",
       "skills": {
-        "architect": ["react-expert"],
-        "builder":   ["react-expert"],
+        "architect": ["react-expert", "ui-ux-pro-max"],
+        "builder":   ["react-expert", "frontend-developer"],
         "reviewer":  ["react-doctor", "security-review"]
       },
       "files_to_create": [
         "frontend/package.json",
-        "frontend/app.json",
+        "frontend/vite.config.ts",
         "frontend/tsconfig.json",
-        "frontend/constants/regimenes.ts",
-        "frontend/services/api.ts",
-        "frontend/components/CampoFormulario.tsx",
-        "frontend/app/index.tsx",
-        "frontend/app/resultado.tsx"
+        "frontend/tailwind.config.js",
+        "frontend/index.html",
+        "frontend/src/main.tsx",
+        "frontend/src/App.tsx",
+        "frontend/src/index.css",
+        "frontend/src/constants/regimenes.ts",
+        "frontend/src/services/api.ts",
+        "frontend/src/components/layout/Header.tsx",
+        "frontend/src/components/ui/ErrorBoundary.tsx",
+        "frontend/src/pages/factura/Formulario.tsx",
+        "frontend/src/pages/factura/Resultado.tsx"
       ],
-      "files_to_modify": [],
+      "files_to_modify": [
+        "amplify.yml"
+      ],
       "blocked_by": null,
-      "review_rounds": 0,
-      "pr_url": null
+      "review_rounds": 1,
+      "pr_url": "https://github.com/LuisFernandoAparicio21/factufast/pull/2",
+      "notes": "Pivot de React Native/Expo (PR #1, cerrado) a React 18 + Vite 5 SPA. Deploy via AWS Amplify. React Doctor 100/100. TypeScript strict sin errores."
     },
     {
       "id": "fase-6",
