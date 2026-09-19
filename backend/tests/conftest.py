@@ -98,11 +98,13 @@ def full_aws(facturas_table, counters_table, s3_bucket, ses_mock):
 
 @pytest.fixture(autouse=True)
 def reset_db_cache():
-    """Limpia el cliente boto3 cacheado en db.py entre tests."""
+    """Limpia los clientes boto3 cacheados en db.py y s3.py entre tests."""
     import utils.db as db_module
     db_module._table = None
+    db_module._counters_table = None
     yield
     db_module._table = None
+    db_module._counters_table = None
 
 
 # ── Helpers compartidos ───────────────────────────────────────────────────────
