@@ -7,6 +7,9 @@ Parameters:
     Type: String
     Default: dev
     AllowedValues: [dev, prod]
+  SesFromEmail:
+    Type: String
+    Description: Email verificado en SES (emisor de facturas y resumenes)
 
 Globals:
   Function:
@@ -67,10 +70,12 @@ Resources:
             TableName: !Ref FacturasTable
         - DynamoDBCrudPolicy:
             TableName: !Ref CountersTable
-        - S3CrudPolicy:
-            BucketName: !Ref FacturasBucket
         - SESSendEmailPolicy:
-            IdentityName: "{{resolve:ssm:/factufast/ses_from_email}}"
+            IdentityName: !Ref SesFromEmail
+        - Statement:
+            - Effect: Allow
+              Action: [s3:PutObject, s3:GetObject]
+              Resource: !Sub "arn:aws:s3:::${FacturasBucket}/facturas/*"
       Events:
         PostFactura:
           Type: Api
@@ -94,10 +99,13 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref FacturasTable
         - SESSendEmailPolicy:
-            IdentityName: "{{resolve:ssm:/factufast/ses_from_email}}"
+            IdentityName: !Ref SesFromEmail
       Environment:
         Variables:
           SES_RESUMEN_CONFIG_SET: factufast-resumen-config
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt ResumenDiarioFunctionDLQ.Arn
       Events:
         DailySchedule:
           Type: ScheduleV2
@@ -162,10 +170,19 @@ Resources:
       SSESpecification:
         SSEEnabled: true
 
+  # ─── SQS ──────────────────────────────────────────────────────────────────
+
+  ResumenDiarioFunctionDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+
   # ─── S3 ───────────────────────────────────────────────────────────────────
 
   FacturasBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
@@ -265,3 +282,7 @@ Outputs:
   CountersTableName:
     Description: Nombre de la tabla DynamoDB de contadores
     Value: !Ref CountersTable
+
+  ApiKeyNote:
+    Description: "Recuperar API Key manualmente: consola API Gateway > API Keys > mostrar valor"
+    Value: !Sub "https://console.aws.amazon.com/apigateway/home?region=${AWS::Region}#/api-keys"
