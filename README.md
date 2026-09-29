@@ -1,6 +1,23 @@
-# FactuFastAI
+<div align="center">
 
-Serverless MVP for generating CFDI 4.0 electronic invoices (Mexico) built on AWS. A business sends 4 fields and receives a stamped invoice by email.
+# 🧾 FactuFastAI
+
+**Serverless CFDI 4.0 e-invoicing on AWS — a business sends 4 fields and gets a stamped invoice by email.**
+
+<br>
+
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![AWS Lambda](https://img.shields.io/badge/AWS_Lambda-FF9900?style=for-the-badge&logo=awslambda&logoColor=white)
+![DynamoDB](https://img.shields.io/badge/DynamoDB-4053D6?style=for-the-badge&logo=amazondynamodb&logoColor=white)
+![AWS SAM](https://img.shields.io/badge/IaC-AWS_SAM-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white)
+
+<sub>Serverless on AWS · stamping via Facturama · CFDI 4.0 (Mexico)</sub>
+
+</div>
 
 > Runs against Facturama sandbox — invoices generated have no legal validity.
 
