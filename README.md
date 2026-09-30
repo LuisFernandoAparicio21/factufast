@@ -54,6 +54,36 @@ React App (Amplify)
 
 ---
 
+## MCP Server (CFDI tools)
+
+`.harness/mcp-server-cfdi/` is a local [MCP](https://modelcontextprotocol.io) server that gives the Claude agent CFDI 4.0 tools. The factufast harness uses it itself (dogfooding): it is registered in `.mcp.json`, so any Claude Code session in this repo can call it.
+
+```
+  Claude Code (harness)                    mcp-server-cfdi (local, stdio)
+  ─────────────────────                    ──────────────────────────────
+  "validate this RFC"  ──────────────────▶ validate_rfc(rfc)       ─▶ { is_valid, rfc_type, errors }
+  "check the stamped XML" ───────────────▶ parse_cfdi_xml(xml)     ─▶ { emisor, receptor, total, UUID }
+  "which PACs exist?"  ──────────────────▶ list_pac_providers()    ─▶ Facturama + alternatives
+  "CFDI 4.0 structure" ──────────────────▶ resource cfdi://schema/4.0
+
+  Why it matters: a folio is spent BEFORE calling Facturama, so bad data costs a folio.
+
+  receptor data ─▶ validate_rfc ─✗─▶ stop, fix the data (no folio spent)
+                        │ ✓
+                        ▼
+                crear_factura ─▶ Facturama stamps ─▶ CFDI XML ─▶ parse_cfdi_xml
+                                                                     │
+                                          emisor / receptor / total / UUID match what was sent?
+```
+
+- **Runs locally:** no network, no credentials, no AWS.
+- **LFPDPPP-safe:** error messages never echo the RFC or XML received; XML parsing blocks XXE.
+- **Tested end to end:** `pytest` (unit tests + a real stdio round trip) and `scripts/dogfood_claude_code.sh`, where a headless Claude Code session calls every tool.
+
+Install and usage: [`.harness/mcp-server-cfdi/README.md`](.harness/mcp-server-cfdi/README.md).
+
+---
+
 ## Project Structure
 
 ```
@@ -102,6 +132,8 @@ factufast/
 │   ├── vite.config.ts
 │   ├── tailwind.config.js
 │   └── package.json
+├── .mcp.json                           # Registers the cfdi-tools MCP server for Claude Code
+├── .harness/mcp-server-cfdi/           # MCP server: validate_rfc, parse_cfdi_xml, list_pac_providers
 ├── scripts/
 │   ├── cargar_csd.py                   # Upload test CSD to Facturama (one-time)
 │   └── test_timbrado.py                # Standalone stamp test (no AWS needed)
