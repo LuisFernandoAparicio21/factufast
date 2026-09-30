@@ -53,7 +53,7 @@ def guardar_factura(datos: dict, resultado: dict, folio: int) -> None:
             "timestamp": now_mx.isoformat(),
             "estatus": "OK",
         },
-        ConditionExpression=Attr("rfc").not_exists(),
+        ConditionExpression=Attr("folio_fiscal").not_exists(),
     )
 
 
