@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "cfdi-tools": {
+      "command": ".harness/mcp-server-cfdi/.venv/Scripts/python.exe",
+      "args": ["-m", "mcp_server_cfdi.server"],
+      "env": {}
+    }
+  }
+}
