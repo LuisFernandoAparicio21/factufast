@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-server-cfdi"
+version = "0.1.0"
+description = "MCP server with CFDI 4.0 utilities (RFC validation, XML parsing) for the factufast harness"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=2.2,<3",
+    "lxml>=5.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+mcp-server-cfdi = "mcp_server_cfdi.server:main"
+
+[tool.setuptools]
+packages = ["mcp_server_cfdi"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
