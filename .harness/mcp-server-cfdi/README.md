@@ -49,10 +49,13 @@ pip install -e ".[dev]"
 python -m mcp_server_cfdi.server   # waits on stdin; Ctrl+C to exit
 ```
 
-`.mcp.json` launches `python -m mcp_server_cfdi.server` with the `python` on
-your PATH. Install the package into that Python (or point `command` at
-`.venv/Scripts/python.exe` / `.venv/bin/python`) so Claude Code can start it.
-Run `claude mcp list` to confirm `cfdi-tools` is connected.
+`.mcp.json` launches the server with this package's venv
+(`.harness/mcp-server-cfdi/.venv/Scripts/python.exe`, a path relative to the
+repo root), so create the venv as shown above. On macOS/Linux, change it to
+`.venv/bin/python`. Don't install into your global Python: mcp 2.x needs
+`typing_extensions>=4.16`, which conflicts with packages that pin older versions
+(e.g. selenium). Run `/mcp` in a Claude Code session to confirm `cfdi-tools`
+is connected.
 
 ## Claude Desktop configuration (paste snippet, restart)
 
