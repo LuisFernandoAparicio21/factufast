@@ -102,3 +102,9 @@ ruff check .
 
 `tests/test_server_stdio.py` starts the server as a subprocess and talks to
 it with the official MCP client, the same way Claude Code does.
+
+To check the real dogfooding path, run `bash scripts/dogfood_claude_code.sh`.
+It starts a headless Claude Code session (`claude -p`) that calls every tool
+and the resource through a temporary MCP config pointing at this venv, then
+asserts on the results (fixture UUID, RFC type, PAC). It spends a small amount
+of Claude usage, so it isn't part of `pytest`.
