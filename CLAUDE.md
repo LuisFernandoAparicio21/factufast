@@ -113,7 +113,7 @@ EventBridge Scheduler (6pm MX tz) → Lambda resumen_diario (daily summary)
 - **Credentials never in code or `.env` files committed to git.** Facturama user/pass and SES sender are stored in SSM Parameter Store (`/factufast/facturama_*`, `/factufast/ses_from_email`) and resolved by SAM at deploy time. For local Lambda invocations use a local `.env` that is gitignored.
 - **Pre-signed S3 URLs expire in 3600s (1h)** — LFPDPPP compliance. Do not increase.
 - **No `python-dotenv` in the Lambda layer** (`backend/layers/python/requirements.txt`). It belongs only in dev/test tooling.
-- **RFC validator** (`backend/src/utils/validators.py`) accepts 13-character RFCs only (persons); 12-char (moral) is intentionally excluded from the MVP.
+- **RFC validator** (`backend/src/utils/validators.py`) accepts 12-character (persona moral) and 13-character (persona física) RFCs — the regex takes 3 or 4 letters; the sandbox receptor `URE180429TM6` is a 12-char moral RFC.
 - **DynamoDB table schema**: PK=`rfc` (S), SK=`folio_fiscal` (S). GSI `fecha-estatus-index` (PK=`fecha_dia`, SK=`timestamp`) supports daily summary queries — must exist for `resumen_diario` Lambda.
 
 ## What Is Not Yet Implemented
