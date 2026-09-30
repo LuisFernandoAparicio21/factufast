@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "cfdi-tools": {
+      "command": "python",
+      "args": ["-m", "mcp_server_cfdi.server"],
+      "env": {}
+    }
+  }
+}

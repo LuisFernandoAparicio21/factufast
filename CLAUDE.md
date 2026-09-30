@@ -124,6 +124,8 @@ The SAM template is missing several resources described in the spec (`.harness/s
 
 This project uses a phased harness under `.harness/specs/fase-{1-7}/`. When starting a new phase, use the `factufast-architect` agent to translate the spec into a concrete implementation plan, then `factufast-builder` to write code, and `factufast-reviewer` to verify exit criteria. Custom slash commands are in `.claude/commands/` (e.g. `/harness-next`, `/harness-status`).
 
+**MCP server `cfdi-tools`** (`.harness/mcp-server-cfdi/`, registered in `.mcp.json`): part of the harness. Before touching test events, fixtures or the Facturama payload, validate RFCs with `validate_rfc`; after a stamp, check the returned XML with `parse_cfdi_xml`. Also exposes `list_pac_providers` and the `cfdi://schema/4.0` resource. Install and usage: `.harness/mcp-server-cfdi/README.md`.
+
 ## Skills Catalog
 
 All skills installed in `~/.claude/skills/`. Invoke with the Skill tool or as slash commands.
